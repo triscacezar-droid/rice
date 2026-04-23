@@ -243,6 +243,11 @@ chmod +x "$CONFIGS/conky/weather.sh"
 mkdir -p "$HOME/.config/autostart"
 ln -sfn "$CONFIGS/conky/conky.desktop" "$HOME/.config/autostart/conky.desktop"
 
+# ------------------------------------------------------------------ Kitty surface shortcut
+cyan "Installing kitty-surface helper"
+ln -sfn "$DOTFILES/scripts/kitty-surface.sh" "$HOME/.local/bin/kitty-surface"
+chmod +x "$DOTFILES/scripts/kitty-surface.sh"
+
 # ------------------------------------------------------------------ papirus-folders (orange)
 # Recolor Papirus-Dark folder icons to gruvbox orange.
 if [[ ! -x "$HOME/.local/bin/papirus-folders" ]]; then
@@ -297,18 +302,51 @@ if command -v gnome-shell >/dev/null; then
     gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
     gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Classic"
 
-    # Pick the first wallpaper we find and apply it (only if user has none set
-    # to a file in ~/Pictures/Wallpapers).
+    # Prefer the gruvbox gradient wallpaper (complements the conky panel).
+    # Fall back to the first wallpaper we find. Only overwrite if the user
+    # hasn't already set something from ~/Pictures/Wallpapers.
     if current=$(gsettings get org.gnome.desktop.background picture-uri-dark 2>/dev/null); then
         if [[ "$current" != *"Pictures/Wallpapers"* ]]; then
-            first_wall=$(find "$WALL_DIR" -maxdepth 1 -type f 2>/dev/null | sort | head -1)
-            if [[ -n "$first_wall" ]]; then
-                gsettings set org.gnome.desktop.background picture-uri      "file://$first_wall"
-                gsettings set org.gnome.desktop.background picture-uri-dark "file://$first_wall"
+            wall="$WALL_DIR/gruvbox_dark_minimal.png"
+            [[ -f "$wall" ]] || wall=$(find "$WALL_DIR" -maxdepth 1 -type f 2>/dev/null | sort | head -1)
+            if [[ -n "$wall" ]]; then
+                gsettings set org.gnome.desktop.background picture-uri      "file://$wall"
+                gsettings set org.gnome.desktop.background picture-uri-dark "file://$wall"
                 gsettings set org.gnome.desktop.background picture-options  "zoom"
             fi
         fi
     fi
+
+    # ------------------------------------------------------------ tiling-assistant
+    # "Nice Maximize" — Super+Shift+M fills the screen but leaves 20px gaps
+    # on all sides, showing the wallpaper and conky through. Uses the
+    # tiling-assistant extension that ships with Ubuntu GNOME.
+    cyan "Configuring tiling-assistant gaps + Super+Shift+M maximize"
+    TA=org.gnome.shell.extensions.tiling-assistant
+    gsettings set $TA maximize-with-gap true   2>/dev/null || true
+    gsettings set $TA single-screen-gap 20     2>/dev/null || true
+    gsettings set $TA window-gap        16     2>/dev/null || true
+    gsettings set $TA screen-top-gap    20     2>/dev/null || true
+    gsettings set $TA screen-bottom-gap 20     2>/dev/null || true
+    gsettings set $TA screen-left-gap   20     2>/dev/null || true
+    gsettings set $TA screen-right-gap  20     2>/dev/null || true
+    gsettings set $TA tile-maximize "['<Super><Shift>m']" 2>/dev/null || true
+
+    # ------------------------------------------------------------ custom keybindings
+    # Super+K surfaces / cycles kitty windows via its remote-control socket.
+    cyan "Binding Super+K to kitty-surface"
+    KB_BASE=org.gnome.settings-daemon.plugins.media-keys
+    KB_PATH=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/kitty-surface/
+    KB_SCHEMA=org.gnome.settings-daemon.plugins.media-keys.custom-keybinding
+    current=$(gsettings get $KB_BASE custom-keybindings 2>/dev/null || echo "@as []")
+    case "$current" in
+        *"$KB_PATH"*)   ;;
+        "@as []"|"[]")  gsettings set $KB_BASE custom-keybindings "['$KB_PATH']" ;;
+        *)              gsettings set $KB_BASE custom-keybindings "${current%]*}, '$KB_PATH']" ;;
+    esac
+    gsettings set $KB_SCHEMA:$KB_PATH name    'Surface Kitty'
+    gsettings set $KB_SCHEMA:$KB_PATH command "$HOME/.local/bin/kitty-surface"
+    gsettings set $KB_SCHEMA:$KB_PATH binding '<Super>k'
 fi
 
 # ------------------------------------------------------------------ Cursor IDE

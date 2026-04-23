@@ -52,11 +52,28 @@ pick up changes.
 
 ### Desktop widget
 - **Conky** — gruvbox-themed translucent overlay in the top-left of the
-  desktop. Shows hostname/kernel, clock, CPU (total + per-core + temp), RAM,
+  desktop. Shows hostname/kernel, clock, CPU (total + 16-thread grid + temp),
+  GPU (busy% + temp + VRAM, from `/sys/class/drm/card*` and `sensors`), RAM,
   swap, disk, network (IP + up/down), Dublin weather (via `wttr.in`, cached
   30 min in `~/.cache/conky/weather.txt`), and top 5 processes by CPU / RAM.
   Autostarts on login via `~/.config/autostart/conky.desktop`. Change weather
-  location by setting `WTTR_LOCATION` in `configs/conky/weather.sh`.
+  location by setting `WTTR_LOCATION` in `configs/conky/weather.sh`. The
+  network iface is hardcoded to `enp2s0` — edit the `${… enp2s0}` tokens in
+  `conky.conf` to match your machine.
+
+### Keyboard shortcuts
+- **Super+Shift+M — Nice Maximize**: expands the focused window to fill the
+  screen but leaves 20px gaps on all sides so the wallpaper and conky peek
+  through. Powered by the `tiling-assistant` GNOME extension (ships with
+  Ubuntu) with `maximize-with-gap` enabled; same gap value used everywhere
+  it tiles (left/right/quarter/etc).
+- **Super+K — Surface Kitty**: cycles focus across all running kitty OS
+  windows. Uses kitty's remote-control socket (`unix:@kitty`), so it works
+  under native Wayland. If no kitty is running, it launches one. Requires
+  `allow_remote_control yes` + `listen_on unix:@kitty` in `kitty.conf`
+  (already set by our config), and kitty must be started *after* those
+  lines existed — existing kitty windows from before the config change
+  won't have the socket and won't participate in cycling until restarted.
 
 ### Not covered by the installer (do manually)
 - **Discord → Vencord** mod — run the interactive installer:
@@ -128,7 +145,9 @@ cursor --install-extension metaphore.kanagawa
 ├── README.md              # this file
 ├── install.sh             # idempotent installer
 ├── scripts/
-│   └── set-theme.sh       # one-command system-wide theme switcher
+│   ├── set-theme.sh       # one-command system-wide theme switcher
+│   ├── gen-wallpaper.py   # regenerate the gruvbox gradient wallpaper
+│   └── kitty-surface.sh   # Super+K window cycler (via kitty IPC)
 ├── configs/               # canonical config files (symlinked to ~/.config/*)
 │   ├── kitty/kitty.conf
 │   ├── alacritty/alacritty.toml
