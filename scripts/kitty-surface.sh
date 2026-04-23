@@ -22,7 +22,14 @@ except Exception:
 )
 
 if (( ${#ids[@]} == 0 )); then
-    setsid kitty >/dev/null 2>&1 < /dev/null &
+    # No kitty running — restore the saved session if we have one,
+    # otherwise start a plain kitty.
+    SESSION="${XDG_CACHE_HOME:-$HOME/.cache}/kitty/session.conf"
+    if [[ -s "$SESSION" ]]; then
+        setsid kitty --session "$SESSION" >/dev/null 2>&1 < /dev/null &
+    else
+        setsid kitty >/dev/null 2>&1 < /dev/null &
+    fi
     exit 0
 fi
 

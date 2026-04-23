@@ -261,10 +261,20 @@ chmod +x "$CONFIGS/conky/weather.sh"
 mkdir -p "$HOME/.config/autostart"
 ln -sfn "$CONFIGS/conky/conky.desktop" "$HOME/.config/autostart/conky.desktop"
 
-# ------------------------------------------------------------------ Kitty surface shortcut
-cyan "Installing kitty-surface helper"
-ln -sfn "$DOTFILES/scripts/kitty-surface.sh" "$HOME/.local/bin/kitty-surface"
-chmod +x "$DOTFILES/scripts/kitty-surface.sh"
+# ------------------------------------------------------------------ Kitty helpers
+cyan "Installing kitty helpers (surface / save-session / restore-session)"
+for s in kitty-surface kitty-save-session kitty-restore-session; do
+    ln -sfn "$DOTFILES/scripts/${s}.sh" "$HOME/.local/bin/${s}"
+    chmod +x "$DOTFILES/scripts/${s}.sh"
+done
+
+# Systemd user timer — snapshot kitty layout every 60s while a graphical
+# session is running. Save script no-ops if the kitty IPC socket isn't up.
+mkdir -p "$HOME/.config/systemd/user"
+ln -sfn "$CONFIGS/systemd-user/kitty-session-save.service" "$HOME/.config/systemd/user/kitty-session-save.service"
+ln -sfn "$CONFIGS/systemd-user/kitty-session-save.timer"   "$HOME/.config/systemd/user/kitty-session-save.timer"
+systemctl --user daemon-reload 2>/dev/null || true
+systemctl --user enable --now kitty-session-save.timer 2>/dev/null || yellow "systemd user timer enable failed (non-fatal)"
 
 # ------------------------------------------------------------------ papirus-folders (orange)
 # Recolor Papirus-Dark folder icons to gruvbox orange.

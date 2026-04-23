@@ -84,11 +84,26 @@ pick up changes.
   it tiles (left/right/quarter/etc).
 - **Super+K — Surface Kitty**: cycles focus across all running kitty OS
   windows. Uses kitty's remote-control socket (`unix:@kitty`), so it works
-  under native Wayland. If no kitty is running, it launches one. Requires
-  `allow_remote_control yes` + `listen_on unix:@kitty` in `kitty.conf`
-  (already set by our config), and kitty must be started *after* those
-  lines existed — existing kitty windows from before the config change
-  won't have the socket and won't participate in cycling until restarted.
+  under native Wayland. If no kitty is running, it **restores the saved
+  session** (see below) or launches a plain kitty if no session exists.
+  Requires `allow_remote_control yes` + `listen_on unix:@kitty` in
+  `kitty.conf` (already set by our config); kittys started before those
+  lines existed don't expose a socket and won't participate.
+
+### Kitty session persistence
+- `kitty-save-session` snapshots every running kitty OS window / tab /
+  window (with cwd + layout) into `~/.cache/kitty/session.conf` that
+  `kitty --session` can replay. A systemd user timer
+  (`kitty-session-save.timer`, every 60 s) runs it automatically.
+- `kitty-restore-session` launches `kitty --session <file>` against that
+  snapshot; Super+K also uses it as the first-launch path when no kitty is
+  running.
+- **Claude Code windows resume their exact conversation**: the save script
+  checks `foreground_processes` for `claude`, finds the most recent
+  `*.jsonl` transcript in `~/.claude/projects/<cwd→dashes>/`, and writes
+  the restore command as
+  `zsh -ic 'claude --dangerously-skip-permissions -r <uuid>; exec zsh -i'`
+  so the shell stays alive after you exit claude.
 
 ### Not covered by the installer (do manually)
 - **Discord → Vencord** mod — run the interactive installer:
@@ -181,7 +196,9 @@ install script into `~/.themes`.
 ├── scripts/
 │   ├── set-theme.sh       # full-rice system-wide theme switcher
 │   ├── gen-wallpaper.py   # gradient wallpaper generator (--top / --bottom)
-│   ├── kitty-surface.sh   # Super+K window cycler (via kitty IPC)
+│   ├── kitty-surface.sh           # Super+K window cycler / first-launch session restore
+│   ├── kitty-save-session.sh      # snapshot kitty layout (systemd timer runs it)
+│   ├── kitty-restore-session.sh   # replay the snapshot via `kitty --session`
 │   └── themes/            # per-theme palette files sourced by set-theme.sh
 │       ├── gruvbox_dark.sh
 │       ├── catppuccin_mocha.sh
