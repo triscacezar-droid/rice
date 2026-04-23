@@ -1,0 +1,78 @@
+# Oh My Zsh
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME=""  # disabled — starship handles the prompt
+
+plugins=(
+    git
+    sudo
+    command-not-found
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# ---- PATH ----
+export PATH="$HOME/.local/bin:$PATH"
+
+# ---- Conda (if installed) ----
+if [ -d "$HOME/miniconda3" ]; then
+    __conda_setup="$("$HOME/miniconda3/bin/conda" 'shell.zsh' 'hook' 2> /dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
+    else
+        [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ] && . "$HOME/miniconda3/etc/profile.d/conda.sh"
+    fi
+    unset __conda_setup
+fi
+
+# ---- SDKMAN (if installed) ----
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+
+# ---- NVM (if installed) ----
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# ---- Starship prompt ----
+command -v starship >/dev/null && eval "$(starship init zsh)"
+
+# ---- zoxide (smart cd) ----
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# ---- atuin (shell history) ----
+[ -f "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
+command -v atuin >/dev/null && eval "$(atuin init zsh)"
+
+# ---- fzf keybindings ----
+[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+[ -f /usr/share/doc/fzf/examples/completion.zsh ]   && source /usr/share/doc/fzf/examples/completion.zsh
+
+# ---- Modern CLI aliases ----
+command -v batcat >/dev/null && alias bat='batcat'
+command -v fdfind >/dev/null && alias fd='fdfind'
+if command -v eza >/dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza -la --icons --group-directories-first --git'
+    alias lt='eza --tree --level=2 --icons'
+fi
+
+# ---- yazi wrapper: `y` cds to the dir you exit from ----
+function y() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        builtin cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"
+}
+
+# ---- Fastfetch splash on interactive shell open ----
+if [[ $- == *i* ]] && command -v fastfetch >/dev/null; then
+    fastfetch
+fi
+
+# ---- Machine-local overrides (aliases, secrets, per-host tweaks) ----
+# Keep anything private or user-specific in ~/.zshrc.local — it is gitignored.
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

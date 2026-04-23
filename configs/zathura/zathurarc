@@ -1,0 +1,58 @@
+# Gruvbox Dark theme for zathura
+# Toggle recolor (dark mode) with: Ctrl+r
+
+set font "JetBrainsMono Nerd Font 11"
+set guioptions ""
+set selection-clipboard clipboard
+set incremental-search true
+set adjust-open "best-fit"
+set scroll-step 50
+set smooth-scroll true
+set window-title-basename true
+set statusbar-basename true
+
+# Recolor PDFs with gruvbox colors (enabled by default)
+set recolor true
+set recolor-keephue true
+set recolor-reverse-video true
+
+# Gruvbox palette
+set default-bg              "#282828"
+set default-fg              "#ebdbb2"
+
+set recolor-lightcolor      "#282828"  # background (was white)
+set recolor-darkcolor       "#ebdbb2"  # foreground (was black)
+
+set statusbar-fg            "#ebdbb2"
+set statusbar-bg            "#3c3836"
+
+set inputbar-fg             "#ebdbb2"
+set inputbar-bg             "#282828"
+
+set notification-fg         "#282828"
+set notification-bg         "#98971a"
+
+set notification-error-fg   "#282828"
+set notification-error-bg   "#fb4934"
+
+set notification-warning-fg "#282828"
+set notification-warning-bg "#fabd2f"
+
+set completion-fg           "#ebdbb2"
+set completion-bg           "#3c3836"
+set completion-group-fg     "#d79921"
+set completion-group-bg     "#3c3836"
+set completion-highlight-fg "#282828"
+set completion-highlight-bg "#d79921"
+
+set highlight-color         "#d79921"
+set highlight-fg            "#282828"
+set highlight-active-color  "#fe8019"
+
+set index-fg                "#ebdbb2"
+set index-bg                "#282828"
+set index-active-fg         "#282828"
+set index-active-bg         "#d79921"
+
+set render-loading-fg       "#ebdbb2"
+set render-loading-bg       "#282828"

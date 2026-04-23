@@ -1,0 +1,10 @@
+# Python bytecode from the Nautilus extension
+configs/nautilus-python/__pycache__/
+*.pyc
+
+# Backup files left by install.sh
+*.pre-dotfiles-*
+
+# Personal/machine-local overrides — never commit
+configs/zshrc.local
+*.local
