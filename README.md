@@ -112,19 +112,30 @@ Run the script with no args for the current list.
 
 **What the script changes:**
 - Alacritty — rewrites the `import = [...]` line to point at the chosen theme.
-- Kitty — invokes `kitten themes --reload-in=all "<Theme Name>"` (live reload across all running kitty windows).
-- Cursor IDE — edits the `workbench.colorTheme` field in `settings.json`.
-- GNOME — switches `color-scheme` to `prefer-dark` / `prefer-light` as appropriate.
+- Kitty — `kitten themes --reload-in=all "<Theme Name>"` (live reload, all windows).
+- Cursor IDE — edits `workbench.colorTheme` in `settings.json`.
+- GNOME — switches `color-scheme` to `prefer-dark` / `prefer-light`.
+- GTK theme — `org.gnome.desktop.interface gtk-theme` (only if the matching
+  theme is installed in `~/.themes` or `/usr/share/themes`; silently skipped
+  otherwise).
+- **Papirus folders** — re-colors folder icons via `papirus-folders -C <color>`
+  (needs one `pkexec` auth prompt per switch; caches nothing).
+- **Wallpaper** — regenerates a 3840x2160 gradient using
+  `scripts/gen-wallpaper.py --top ... --bottom ...` and applies it.
+- **Conky widget** — rewrites the palette fields (`color1..9`,
+  `default_color`, `own_window_colour`) in-place in
+  `configs/conky/conky.conf` and restarts conky so the change is live.
 
-**What the script does NOT change** (these four are gruvbox-only — hand-themed):
+Each theme has a file in `scripts/themes/<name>.sh` that declares the
+palette, accent, Papirus folder color, wallpaper gradient, and GTK theme
+name. To tweak a theme or add a new one, edit/create a file there — no
+changes to `set-theme.sh` needed.
+
+**What the script does NOT change** (hand-themed, low visual impact):
 - Zathura (`configs/zathura/zathurarc`)
 - Yazi (`configs/yazi/theme.toml`)
 - Lazygit (`configs/lazygit/config.yml`)
 - Starship (`configs/starship/starship.toml`)
-
-To re-theme those, edit the file directly or replace it with a variant from
-each project's theme gallery. They use tool-specific formats so a universal
-switcher for all of them would be overkill.
 
 **Cursor IDE caveat:** switching to a non-gruvbox theme assumes the matching
 Cursor extension is installed. Install them with:
@@ -138,6 +149,14 @@ cursor --install-extension sainnhe.everforest
 cursor --install-extension metaphore.kanagawa
 ```
 
+**GTK theme caveat:** only the `Gruvbox-Orange-Dark/Light` variants are
+installed by `install.sh`. For other themes the switcher silently skips
+the GTK step. To get full GTK theming for a non-gruvbox theme, clone the
+matching repo from [Fausto-Korpsvart](https://github.com/Fausto-Korpsvart)
+(Catppuccin-GTK-Theme, Tokyonight-GTK-Theme, Nordic, RosePine-GTK-Theme,
+Dracula-GTK-Theme, Everforest-GTK-Theme, Kanagawa-GTK-Theme) and run its
+install script into `~/.themes`.
+
 ## Directory layout
 
 ```
@@ -145,9 +164,13 @@ cursor --install-extension metaphore.kanagawa
 ├── README.md              # this file
 ├── install.sh             # idempotent installer
 ├── scripts/
-│   ├── set-theme.sh       # one-command system-wide theme switcher
-│   ├── gen-wallpaper.py   # regenerate the gruvbox gradient wallpaper
-│   └── kitty-surface.sh   # Super+K window cycler (via kitty IPC)
+│   ├── set-theme.sh       # full-rice system-wide theme switcher
+│   ├── gen-wallpaper.py   # gradient wallpaper generator (--top / --bottom)
+│   ├── kitty-surface.sh   # Super+K window cycler (via kitty IPC)
+│   └── themes/            # per-theme palette files sourced by set-theme.sh
+│       ├── gruvbox_dark.sh
+│       ├── catppuccin_mocha.sh
+│       └── …
 ├── configs/               # canonical config files (symlinked to ~/.config/*)
 │   ├── kitty/kitty.conf
 │   ├── alacritty/alacritty.toml

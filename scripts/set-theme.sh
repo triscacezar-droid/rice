@@ -1,115 +1,136 @@
 #!/usr/bin/env bash
-# Switch the system-wide color theme across Alacritty, Kitty, Cursor, and GNOME.
+# Switch the system-wide color theme across terminal, editor, desktop widget,
+# folders, wallpaper, and GTK. Theme data lives in scripts/themes/<name>.sh.
 #
 # Usage:  set-theme.sh <theme>
-# Themes: gruvbox_dark  gruvbox_light  catppuccin_mocha  tokyo_night  dracula  nord
+# Run with no args to see the list of themes.
 #
-# Apps that stay gruvbox-only regardless: zathura, yazi, lazygit, starship
-# (their theming is hand-authored; to change, edit the config file directly
-# or replace it with a variant theme — see README).
-
+# Apps that stay hand-authored (not switched): zathura, yazi, lazygit, starship.
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 THEME="${1:-}"
 
-if [[ -z "$THEME" ]]; then
+if [[ -z "$THEME" || "$THEME" == "-h" || "$THEME" == "--help" ]]; then
     echo "usage: $0 <theme>"
     echo "themes:"
-    for t in "$DOTFILES/configs/alacritty/themes/"*.toml; do
-        echo "  - $(basename "$t" .toml)"
+    for t in "$DOTFILES/scripts/themes/"*.sh; do
+        echo "  - $(basename "$t" .sh)"
     done
     exit 1
 fi
 
+THEME_FILE="$DOTFILES/scripts/themes/${THEME}.sh"
 ALACRITTY_THEME_FILE="$DOTFILES/configs/alacritty/themes/${THEME}.toml"
-if [[ ! -f "$ALACRITTY_THEME_FILE" ]]; then
-    echo "error: no alacritty theme '$THEME' (file $ALACRITTY_THEME_FILE missing)"
-    exit 1
-fi
+[[ -f "$THEME_FILE"     ]] || { echo "error: no theme file '$THEME_FILE'"; exit 1; }
+[[ -f "$ALACRITTY_THEME_FILE" ]] || { echo "error: no alacritty theme '$ALACRITTY_THEME_FILE'"; exit 1; }
 
-# ---- Mapping from our theme name → Kitty theme name ----
-declare -A KITTY_NAME=(
-    [gruvbox_dark]="Gruvbox Dark"
-    [gruvbox_light]="Gruvbox Light"
-    [catppuccin_mocha]="Catppuccin-Mocha"
-    [tokyo_night]="Tokyo Night"
-    [tokyo_night_storm]="Tokyo Night Storm"
-    [dracula]="Dracula"
-    [nord]="Nord"
-    [rose_pine]="Rosé Pine"
-    [everforest]="Everforest Dark Medium"
-    [kanagawa]="Kanagawa"
-)
-# ---- Mapping → Cursor IDE color theme ----
-# Install the extension first, otherwise Cursor falls back to default:
-#   gruvbox:           jdinhlife.gruvbox
-#   catppuccin:        Catppuccin.catppuccin-vsc
-#   tokyo night:       enkia.tokyo-night
-#   dracula:           dracula-theme.theme-dracula
-#   nord:              arcticicestudio.nord-visual-studio-code
-#   rose pine:         mvllow.rose-pine
-#   everforest:        sainnhe.everforest
-#   kanagawa:          metaphore.kanagawa  (or  qufiwefefwoyn.kanagawa)
-declare -A CURSOR_NAME=(
-    [gruvbox_dark]="Gruvbox Dark Medium"
-    [gruvbox_light]="Gruvbox Light Medium"
-    [catppuccin_mocha]="Catppuccin Mocha"
-    [tokyo_night]="Tokyo Night"
-    [tokyo_night_storm]="Tokyo Night Storm"
-    [dracula]="Dracula"
-    [nord]="Nord"
-    [rose_pine]="Rosé Pine"
-    [everforest]="Everforest Dark"
-    [kanagawa]="Kanagawa"
-)
-# ---- Mapping → GNOME color-scheme ----
-declare -A GNOME_SCHEME=(
-    [gruvbox_dark]="prefer-dark"
-    [gruvbox_light]="prefer-light"
-    [catppuccin_mocha]="prefer-dark"
-    [tokyo_night]="prefer-dark"
-    [tokyo_night_storm]="prefer-dark"
-    [dracula]="prefer-dark"
-    [nord]="prefer-dark"
-    [rose_pine]="prefer-dark"
-    [everforest]="prefer-dark"
-    [kanagawa]="prefer-dark"
-)
+# shellcheck disable=SC1090
+source "$THEME_FILE"
 
 echo "==> Switching to '$THEME'"
 
-# ---- Alacritty ----
+# ---- Alacritty -------------------------------------------------------------
 ALACRITTY_CONFIG="$DOTFILES/configs/alacritty/alacritty.toml"
 if [[ -f "$ALACRITTY_CONFIG" ]]; then
-    echo "    alacritty: import themes/${THEME}.toml"
-    # Replace the first path inside the import = [...] array.
+    echo "    alacritty:  themes/${THEME}.toml"
     sed -i -E "s|\"~/.config/alacritty/themes/[^\"]+\"|\"~/.config/alacritty/themes/${THEME}.toml\"|" \
         "$ALACRITTY_CONFIG"
 fi
 
-# ---- Kitty ----
-if command -v kitten >/dev/null && [[ -n "${KITTY_NAME[$THEME]:-}" ]]; then
-    echo "    kitty:     ${KITTY_NAME[$THEME]}"
-    kitten themes --reload-in=all "${KITTY_NAME[$THEME]}" >/dev/null 2>&1 \
-        || echo "               (kitty theme apply failed — non-fatal)"
+# ---- Kitty -----------------------------------------------------------------
+if command -v kitten >/dev/null && [[ -n "${KITTY_NAME:-}" ]]; then
+    echo "    kitty:      ${KITTY_NAME}"
+    kitten themes --reload-in=all "${KITTY_NAME}" >/dev/null 2>&1 \
+        || echo "                (kitty theme apply failed — non-fatal)"
 fi
 
-# ---- Cursor IDE ----
+# ---- Cursor IDE ------------------------------------------------------------
 CURSOR_SETTINGS="$HOME/.config/Cursor/User/settings.json"
-if [[ -f "$CURSOR_SETTINGS" && -n "${CURSOR_NAME[$THEME]:-}" ]]; then
-    echo "    cursor:    ${CURSOR_NAME[$THEME]}"
-    # Minimal JSON edit without jq dependency.
+if [[ -f "$CURSOR_SETTINGS" && -n "${CURSOR_NAME:-}" ]]; then
+    echo "    cursor:     ${CURSOR_NAME}"
     if grep -q '"workbench.colorTheme"' "$CURSOR_SETTINGS"; then
-        sed -i -E "s|(\"workbench.colorTheme\":\s*)\"[^\"]*\"|\1\"${CURSOR_NAME[$THEME]}\"|" \
+        sed -i -E "s|(\"workbench.colorTheme\":\s*)\"[^\"]*\"|\1\"${CURSOR_NAME}\"|" \
             "$CURSOR_SETTINGS"
     fi
 fi
 
-# ---- GNOME ----
-if command -v gsettings >/dev/null && [[ -n "${GNOME_SCHEME[$THEME]:-}" ]]; then
-    echo "    gnome:     color-scheme=${GNOME_SCHEME[$THEME]}"
-    gsettings set org.gnome.desktop.interface color-scheme "${GNOME_SCHEME[$THEME]}"
+# ---- GNOME color-scheme ----------------------------------------------------
+if command -v gsettings >/dev/null && [[ -n "${GNOME_SCHEME:-}" ]]; then
+    echo "    gnome:      color-scheme=${GNOME_SCHEME}"
+    gsettings set org.gnome.desktop.interface color-scheme "${GNOME_SCHEME}"
+fi
+
+# ---- GTK theme (skip if not installed) -------------------------------------
+if command -v gsettings >/dev/null && [[ -n "${GTK_THEME:-}" ]]; then
+    if [[ -d "$HOME/.themes/${GTK_THEME}" ]] \
+       || [[ -d "/usr/share/themes/${GTK_THEME}" ]]; then
+        echo "    gtk:        ${GTK_THEME}"
+        gsettings set org.gnome.desktop.interface gtk-theme "${GTK_THEME}"
+    else
+        echo "    gtk:        ${GTK_THEME}  [skipped — not installed in ~/.themes or /usr/share/themes]"
+    fi
+fi
+
+# ---- Papirus folder color --------------------------------------------------
+# papirus-folders edits /usr/share/icons → needs root. Use pkexec for a GUI
+# password prompt; fall back to a plain message if pkexec isn't available.
+if [[ -x "$HOME/.local/bin/papirus-folders" && -n "${PAPIRUS_COLOR:-}" ]]; then
+    PAPIRUS_BASE="${PAPIRUS_BASE:-Papirus-Dark}"
+    echo "    folders:    ${PAPIRUS_COLOR} on ${PAPIRUS_BASE}  (auth prompt)"
+    if command -v pkexec >/dev/null; then
+        pkexec "$HOME/.local/bin/papirus-folders" -C "$PAPIRUS_COLOR" -t "$PAPIRUS_BASE" >/dev/null \
+            || echo "                (papirus-folders apply failed — re-run with sudo)"
+    else
+        sudo "$HOME/.local/bin/papirus-folders" -C "$PAPIRUS_COLOR" -t "$PAPIRUS_BASE" >/dev/null \
+            || echo "                (papirus-folders apply failed)"
+    fi
+    # Also switch the active icon theme to match (Dark vs Light variant).
+    gsettings set org.gnome.desktop.interface icon-theme "$PAPIRUS_BASE" 2>/dev/null || true
+fi
+
+# ---- Wallpaper -------------------------------------------------------------
+if command -v python3 >/dev/null && python3 -c "from PIL import Image" 2>/dev/null; then
+    WALL_DIR="$HOME/Pictures/Wallpapers"
+    WALL_OUT="$WALL_DIR/theme_${THEME}.png"
+    mkdir -p "$WALL_DIR"
+    echo "    wallpaper:  #${WALL_TOP:-32302f} → #${WALL_BOTTOM:-1d2021}"
+    python3 "$DOTFILES/scripts/gen-wallpaper.py" "$WALL_OUT" \
+            --top "${WALL_TOP:-32302f}" --bottom "${WALL_BOTTOM:-1d2021}" >/dev/null
+    gsettings set org.gnome.desktop.background picture-uri      "file://$WALL_OUT"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALL_OUT"
+    gsettings set org.gnome.desktop.background picture-options  "zoom"
+fi
+
+# ---- Conky palette ---------------------------------------------------------
+# Rewrite the colour fields in configs/conky/conky.conf, then restart conky.
+CONKY_CONF="$DOTFILES/configs/conky/conky.conf"
+if [[ -f "$CONKY_CONF" ]]; then
+    echo "    conky:      palette + panel"
+    # Replace the top-of-file config values (KEY = 'HEX'). Leaves the
+    # ${colorN} tokens in conky.text untouched — they reference the names.
+    sub() {  # sub <key> <hex>
+        sed -i -E "s|(^\s*${1}\s*=\s*')[0-9a-fA-F]{6}(')|\1${2}\2|" "$CONKY_CONF"
+    }
+    sub default_color          "${CONKY_FG:-ebdbb2}"
+    sub default_outline_color  "${CONKY_BG:-1d2021}"
+    sub default_shade_color    "${CONKY_BG:-1d2021}"
+    sub own_window_colour      "${CONKY_BG:-1d2021}"
+    sub color1                 "${CONKY_C1:-fe8019}"
+    sub color2                 "${CONKY_C2:-b8bb26}"
+    sub color3                 "${CONKY_C3:-fabd2f}"
+    sub color4                 "${CONKY_C4:-fb4934}"
+    sub color5                 "${CONKY_C5:-83a598}"
+    sub color6                 "${CONKY_C6:-d3869b}"
+    sub color7                 "${CONKY_C7:-8ec07c}"
+    sub color8                 "${CONKY_MUTED:-665c54}"
+    sub color9                 "${CONKY_FG_MUTED:-a89984}"
+
+    if pgrep -x conky >/dev/null; then
+        pkill -x conky
+        sleep 0.3
+        nohup conky -c "$HOME/.config/conky/conky.conf" >/dev/null 2>&1 & disown
+    fi
 fi
 
 echo "==> Done. Open a fresh terminal window for Kitty/Alacritty to pick up the font color change."

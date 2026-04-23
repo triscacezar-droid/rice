@@ -1,33 +1,53 @@
 #!/usr/bin/env python3
-"""Generate a subtle gruvbox-dark gradient wallpaper that complements the
-conky widget's semi-opaque #1d2021 panel. 3840x2160 so it scales cleanly
-to 2560x1440 and 1920x1080 displays."""
+"""Generate a subtle two-color vertical gradient wallpaper (3840x2160) with
+light noise to avoid banding. Defaults are gruvbox-dark; other themes pass
+their own colors so the wallpaper complements the conky panel.
+
+Usage:
+    gen-wallpaper.py [OUT]                       # gruvbox dark defaults
+    gen-wallpaper.py --top HEX --bottom HEX [OUT]
+    gen-wallpaper.py OUT --top HEX --bottom HEX
+"""
 
 from PIL import Image
 from pathlib import Path
+import argparse
 import random
-import sys
 
-W, H = 3840, 2160
-TOP    = (0x32, 0x30, 0x2f)  # gruvbox bg0_s
-BOTTOM = (0x1d, 0x20, 0x21)  # gruvbox bg0_h (matches conky panel)
 
-out = Path(sys.argv[1] if len(sys.argv) > 1
-           else Path.home() / "Pictures/Wallpapers/gruvbox_dark_minimal.png")
+def parse_hex(s: str) -> tuple[int, int, int]:
+    s = s.lstrip("#")
+    if len(s) != 6:
+        raise argparse.ArgumentTypeError(f"expected 6-digit hex, got {s!r}")
+    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+
+
+p = argparse.ArgumentParser()
+p.add_argument("out", nargs="?",
+               default=str(Path.home() / "Pictures/Wallpapers/gruvbox_dark_minimal.png"))
+p.add_argument("--top",    type=parse_hex, default=(0x32, 0x30, 0x2f))
+p.add_argument("--bottom", type=parse_hex, default=(0x1d, 0x20, 0x21))
+p.add_argument("--size",   default="3840x2160")
+p.add_argument("--seed",   type=int, default=42)
+args = p.parse_args()
+
+W, H = (int(x) for x in args.size.split("x"))
+out = Path(args.out)
 out.parent.mkdir(parents=True, exist_ok=True)
 
 img = Image.new("RGB", (W, H))
 px = img.load()
+tr, tg, tb = args.top
+br, bg, bb = args.bottom
 for y in range(H):
     t = y / (H - 1)
-    r = int(TOP[0] + (BOTTOM[0] - TOP[0]) * t)
-    g = int(TOP[1] + (BOTTOM[1] - TOP[1]) * t)
-    b = int(TOP[2] + (BOTTOM[2] - TOP[2]) * t)
+    r = int(tr + (br - tr) * t)
+    g = int(tg + (bg - tg) * t)
+    b = int(tb + (bb - tb) * t)
     for x in range(W):
         px[x, y] = (r, g, b)
 
-# Subtle noise so the gradient doesn't band on 8-bit panels.
-rng = random.Random(42)
+rng = random.Random(args.seed)
 for y in range(0, H, 2):
     for x in range(0, W, 2):
         r, g, b = px[x, y]
