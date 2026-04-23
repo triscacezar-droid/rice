@@ -35,6 +35,7 @@ sudo apt-get install -y --no-install-recommends \
     zathura zathura-pdf-poppler \
     fzf ripgrep bat fd-find zoxide \
     btop \
+    conky-all \
     papirus-icon-theme \
     sassc \
     python3-nautilus wl-clipboard \
@@ -209,6 +210,7 @@ link() {  # link <src-in-configs> <dst-in-home>
     ln -sfn "$src" "$dst"
 }
 
+link conky/conky.conf                 .config/conky/conky.conf
 link kitty/kitty.conf                 .config/kitty/kitty.conf
 link alacritty/alacritty.toml         .config/alacritty/alacritty.toml
 mkdir -p "$HOME/.config/alacritty/themes"
@@ -221,6 +223,30 @@ link yazi/theme.toml                  .config/yazi/theme.toml
 link lazygit/config.yml               .config/lazygit/config.yml
 link nautilus-python/copy_path.py     .local/share/nautilus-python/extensions/copy_path.py
 link zshrc                            .zshrc
+
+# ------------------------------------------------------------------ Conky widget
+cyan "Installing conky weather fetcher and autostart"
+ln -sfn "$CONFIGS/conky/weather.sh" "$HOME/.local/bin/conky-weather"
+chmod +x "$CONFIGS/conky/weather.sh"
+mkdir -p "$HOME/.config/autostart"
+ln -sfn "$CONFIGS/conky/conky.desktop" "$HOME/.config/autostart/conky.desktop"
+
+# ------------------------------------------------------------------ papirus-folders (orange)
+# Recolor Papirus-Dark folder icons to gruvbox orange.
+if [[ ! -x "$HOME/.local/bin/papirus-folders" ]]; then
+    cyan "Installing papirus-folders"
+    curl -fsSL https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders \
+        -o "$HOME/.local/bin/papirus-folders"
+    chmod +x "$HOME/.local/bin/papirus-folders"
+else
+    green "papirus-folders already installed"
+fi
+# papirus-folders modifies /usr/share/icons — needs root.
+if [[ -r /usr/share/icons/Papirus-Dark/index.theme ]]; then
+    cyan "Recoloring Papirus-Dark folders to orange (needs sudo)"
+    sudo "$HOME/.local/bin/papirus-folders" -C orange -t Papirus-Dark >/dev/null \
+        || yellow "papirus-folders run failed — re-run ~/.local/bin/papirus-folders -C orange -t Papirus-Dark"
+fi
 
 # ------------------------------------------------------------------ Kitty theme
 # The theme kitten writes current-theme.conf & edits kitty.conf's BEGIN/END

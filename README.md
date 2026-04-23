@@ -50,6 +50,14 @@ pick up changes.
   uses Gdk.Clipboard directly — no `wl-copy` subprocess because that hangs
   from inside GTK apps).
 
+### Desktop widget
+- **Conky** — gruvbox-themed translucent overlay in the top-left of the
+  desktop. Shows hostname/kernel, clock, CPU (total + per-core + temp), RAM,
+  swap, disk, network (IP + up/down), Dublin weather (via `wttr.in`, cached
+  30 min in `~/.cache/conky/weather.txt`), and top 5 processes by CPU / RAM.
+  Autostarts on login via `~/.config/autostart/conky.desktop`. Change weather
+  location by setting `WTTR_LOCATION` in `configs/conky/weather.sh`.
+
 ### Not covered by the installer (do manually)
 - **Discord → Vencord** mod — run the interactive installer:
   `sh -c "$(curl -sS https://raw.githubusercontent.com/Vencord/Installer/main/install.sh)"`
@@ -129,6 +137,9 @@ cursor --install-extension metaphore.kanagawa
 │   ├── zathura/zathurarc
 │   ├── yazi/theme.toml
 │   ├── lazygit/config.yml
+│   ├── conky/conky.conf       # desktop widget layout
+│   ├── conky/weather.sh       # wttr.in fetcher (symlinked to ~/.local/bin/conky-weather)
+│   ├── conky/conky.desktop    # GNOME autostart entry
 │   ├── nautilus-python/copy_path.py
 │   └── zshrc
 ```

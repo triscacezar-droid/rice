@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Conky
+Comment=Gruvbox desktop widget (CPU/RAM/disk/net/weather)
+Exec=bash -c "sleep 8 && conky -c ~/.config/conky/conky.conf"
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=6
