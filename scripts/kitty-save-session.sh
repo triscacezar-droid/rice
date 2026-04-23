@@ -17,23 +17,24 @@ json=$(kitten @ --to="$SOCK" ls 2>/dev/null) || exit 0
 [[ -z "$json" ]] && exit 0
 
 printf '%s' "$json" | /usr/bin/env python3 - "$OUT" <<'PY'
-import json, os, sys, glob, shlex
+import json, os, sys, shlex
 
 data = json.load(sys.stdin)
 out_path = sys.argv[1]
 home = os.path.expanduser("~")
-projects_root = os.path.join(home, ".claude", "projects")
+sessions_dir = os.path.join(home, ".claude", "sessions")
 
-def claude_resume_uuid(cwd: str) -> str | None:
-    # Claude Code encodes the project path as absolute-path-with-slashes → dashes.
-    encoded = cwd.replace("/", "-")
-    proj = os.path.join(projects_root, encoded)
-    if not os.path.isdir(proj):
+def claude_session_id(pid: int | None) -> str | None:
+    # Claude Code writes one ~/.claude/sessions/<PID>.json per running
+    # process. `sessionId` is the resume token to pass to `claude -r`.
+    if not pid:
         return None
-    jsonls = glob.glob(os.path.join(proj, "*.jsonl"))
-    if not jsonls:
+    path = os.path.join(sessions_dir, f"{pid}.json")
+    try:
+        with open(path) as f:
+            return json.load(f).get("sessionId")
+    except (OSError, ValueError):
         return None
-    return os.path.splitext(os.path.basename(max(jsonls, key=os.path.getmtime)))[0]
 
 def fg_non_shell(window: dict):
     for p in window.get("foreground_processes", []):
@@ -43,18 +44,18 @@ def fg_non_shell(window: dict):
         exe = os.path.basename(cmdline[0])
         if exe in ("zsh", "bash", "sh", "fish", "dash"):
             continue
-        return cmdline
+        return p  # full process dict, we need the pid
     return None
 
-def launch_cmd(cwd: str, fg_cmdline):
-    # If the window is running claude, snapshot the resume UUID and wrap it
-    # in `zsh -ic '...; exec zsh -i'` so the shell stays after claude exits.
-    if fg_cmdline and os.path.basename(fg_cmdline[0]) == "claude":
-        uuid = claude_resume_uuid(cwd)
-        if uuid:
-            resume = f"claude --dangerously-skip-permissions -r {uuid}"
-            # Inner command is single-quoted for zsh -ic; UUID is hex/dash-safe.
-            return f"zsh -ic {shlex.quote(resume + '; exec zsh -i')}"
+def launch_cmd(cwd: str, fg_proc):
+    if fg_proc:
+        cmdline = fg_proc.get("cmdline") or []
+        if cmdline and os.path.basename(cmdline[0]) == "claude":
+            uuid = claude_session_id(fg_proc.get("pid"))
+            if uuid:
+                resume = f"claude --dangerously-skip-permissions -r {uuid}"
+                # Wrap so the shell stays alive after claude exits.
+                return f"zsh -ic {shlex.quote(resume + '; exec zsh -i')}"
     return "zsh -i"
 
 lines: list[str] = []

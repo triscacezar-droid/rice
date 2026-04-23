@@ -98,11 +98,13 @@ pick up changes.
 - `kitty-restore-session` launches `kitty --session <file>` against that
   snapshot; Super+K also uses it as the first-launch path when no kitty is
   running.
-- **Claude Code windows resume their exact conversation**: the save script
-  checks `foreground_processes` for `claude`, finds the most recent
-  `*.jsonl` transcript in `~/.claude/projects/<cwd→dashes>/`, and writes
-  the restore command as
-  `zsh -ic 'claude --dangerously-skip-permissions -r <uuid>; exec zsh -i'`
+- **Claude Code windows resume their exact conversation**, even when
+  multiple claude processes share the same cwd (e.g. three splits in one
+  kitty). The save script reads each claude foreground process's PID,
+  looks up `~/.claude/sessions/<pid>.json`, and pulls `sessionId` — a
+  per-process resume token that Claude Code writes on startup. The
+  restore command becomes
+  `zsh -ic 'claude --dangerously-skip-permissions -r <sessionId>; exec zsh -i'`
   so the shell stays alive after you exit claude.
 
 ### Not covered by the installer (do manually)
