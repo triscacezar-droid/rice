@@ -381,15 +381,41 @@ if command -v xdg-mime >/dev/null; then
 fi
 
 # ------------------------------------------------------------------ GDM login screen
-# Apply gruvbox background + cursor/icon themes to the GDM greeter via dconf.
-# Idempotent: re-running just rewrites the files and re-runs `dconf update`.
+# Ubuntu's GDM ignores plain dconf overrides — the background is baked into
+# /usr/share/gnome-shell/gnome-shell-theme.gresource. The `gdm-settings`
+# package ships a Python module that patches the gresource properly; we use
+# its API directly (gdm-settings has no CLI for apply, only a GUI).
 GDM_WALLPAPER="/usr/share/backgrounds/gruvbox_dark_minimal.png"
-if [[ -d /etc/dconf/profile ]] && [[ -f "$WALL_DIR/gruvbox_dark_minimal.png" ]]; then
-    cyan "Theming GDM login screen (needs sudo)"
-    sudo install -Dm644 "$WALL_DIR/gruvbox_dark_minimal.png"   "$GDM_WALLPAPER"             || yellow "gdm wallpaper copy failed"
-    sudo install -Dm644 "$CONFIGS/gdm/profile-gdm"             /etc/dconf/profile/gdm       || yellow "gdm profile install failed"
-    sudo install -Dm644 "$CONFIGS/gdm/00-theme"                /etc/dconf/db/gdm.d/00-theme || yellow "gdm theme install failed"
-    sudo dconf update                                                                       || yellow "dconf update failed"
+if [[ -f "$WALL_DIR/gruvbox_dark_minimal.png" ]]; then
+    cyan "Installing gdm-settings"
+    if ! command -v gdm-settings >/dev/null; then
+        sudo apt-get install -y gdm-settings >/dev/null || yellow "gdm-settings install failed"
+    fi
+    # Ship the wallpaper + plain dconf override as a belt-and-braces fallback
+    # on non-Ubuntu GDM (vanilla GNOME honors the dconf path).
+    sudo install -Dm644 "$WALL_DIR/gruvbox_dark_minimal.png" "$GDM_WALLPAPER"
+    sudo install -Dm644 "$CONFIGS/gdm/profile-gdm" /etc/dconf/profile/gdm       2>/dev/null || true
+    sudo install -Dm644 "$CONFIGS/gdm/00-theme"    /etc/dconf/db/gdm.d/00-theme 2>/dev/null || true
+    sudo dconf update 2>/dev/null || true
+
+    if command -v gdm-settings >/dev/null; then
+        cyan "Patching GDM gresource with gruvbox wallpaper"
+        gsettings set io.github.realmazharhussain.GdmSettings.appearance background-type 'image'
+        gsettings set io.github.realmazharhussain.GdmSettings.appearance background-image "$GDM_WALLPAPER"
+        gsettings set io.github.realmazharhussain.GdmSettings.appearance cursor-theme 'Bibata-Modern-Classic'
+        gsettings set io.github.realmazharhussain.GdmSettings.appearance icon-theme  'Papirus-Dark'
+        # Use /usr/bin/python3 explicitly — a user's conda python may shadow
+        # the system one and fail to import gi.
+        /usr/bin/python3 - <<'PY' 2>&1 | grep -vE "^DEBUG|Failed to parse" || yellow "gdm-settings apply failed — run gdm-settings GUI manually"
+import sys
+sys.path.insert(0, '/usr/lib/python3/dist-packages')
+from gdms import settings
+settings.init()
+ok = settings.apply()
+print("gdm apply:", "OK" if ok else "FAILED")
+settings.finalize()
+PY
+    fi
 fi
 
 # ------------------------------------------------------------------ wrap up

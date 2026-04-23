@@ -54,9 +54,12 @@ pick up changes.
 
 ### Login screen
 - **GDM** uses the gruvbox gradient wallpaper and the Bibata cursor / Papirus
-  icons, via dconf overrides in `/etc/dconf/db/gdm.d/00-theme` with the
-  profile at `/etc/dconf/profile/gdm`. Re-applied whenever `install.sh` runs
-  (needs sudo). Sources live in `configs/gdm/`.
+  icons on the greeter. Ubuntu's GDM ignores plain dconf overrides — the
+  background is baked into `/usr/share/gnome-shell/gnome-shell-theme.gresource`.
+  We install the `gdm-settings` apt package and drive its Python API from
+  `install.sh` to patch the gresource (a `.default` backup is saved next to
+  it). Plain dconf overrides are still installed as a fallback for vanilla
+  GDM. Sources live in `configs/gdm/`.
 
 ### Desktop widget
 - **Conky** — gruvbox-themed translucent overlay in the top-left of the
