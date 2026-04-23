@@ -71,15 +71,19 @@ pick up changes.
 Run one command:
 
 ```bash
-~/dotfiles/scripts/set-theme.sh gruvbox_dark      # default
+~/dotfiles/scripts/set-theme.sh gruvbox_dark        # default
+~/dotfiles/scripts/set-theme.sh gruvbox_light
 ~/dotfiles/scripts/set-theme.sh catppuccin_mocha
 ~/dotfiles/scripts/set-theme.sh tokyo_night
+~/dotfiles/scripts/set-theme.sh tokyo_night_storm
 ~/dotfiles/scripts/set-theme.sh dracula
 ~/dotfiles/scripts/set-theme.sh nord
-~/dotfiles/scripts/set-theme.sh gruvbox_light
+~/dotfiles/scripts/set-theme.sh rose_pine
+~/dotfiles/scripts/set-theme.sh everforest
+~/dotfiles/scripts/set-theme.sh kanagawa
 ```
 
-Run the script with no args for the full list.
+Run the script with no args for the current list.
 
 **What the script changes:**
 - Alacritty — rewrites the `import = [...]` line to point at the chosen theme.
@@ -104,6 +108,9 @@ cursor --install-extension Catppuccin.catppuccin-vsc
 cursor --install-extension enkia.tokyo-night
 cursor --install-extension dracula-theme.theme-dracula
 cursor --install-extension arcticicestudio.nord-visual-studio-code
+cursor --install-extension mvllow.rose-pine
+cursor --install-extension sainnhe.everforest
+cursor --install-extension metaphore.kanagawa
 ```
 
 ## Directory layout

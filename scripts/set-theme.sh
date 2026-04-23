@@ -34,19 +34,34 @@ declare -A KITTY_NAME=(
     [gruvbox_light]="Gruvbox Light"
     [catppuccin_mocha]="Catppuccin-Mocha"
     [tokyo_night]="Tokyo Night"
+    [tokyo_night_storm]="Tokyo Night Storm"
     [dracula]="Dracula"
     [nord]="Nord"
+    [rose_pine]="Rosé Pine"
+    [everforest]="Everforest Dark Medium"
+    [kanagawa]="Kanagawa"
 )
 # ---- Mapping → Cursor IDE color theme ----
-# These require the corresponding extension installed:
-#   jdinhlife.gruvbox, Catppuccin.catppuccin-vsc, enkia.tokyo-night, dracula-theme.theme-dracula, arcticicestudio.nord-visual-studio-code
+# Install the extension first, otherwise Cursor falls back to default:
+#   gruvbox:           jdinhlife.gruvbox
+#   catppuccin:        Catppuccin.catppuccin-vsc
+#   tokyo night:       enkia.tokyo-night
+#   dracula:           dracula-theme.theme-dracula
+#   nord:              arcticicestudio.nord-visual-studio-code
+#   rose pine:         mvllow.rose-pine
+#   everforest:        sainnhe.everforest
+#   kanagawa:          metaphore.kanagawa  (or  qufiwefefwoyn.kanagawa)
 declare -A CURSOR_NAME=(
     [gruvbox_dark]="Gruvbox Dark Medium"
     [gruvbox_light]="Gruvbox Light Medium"
     [catppuccin_mocha]="Catppuccin Mocha"
     [tokyo_night]="Tokyo Night"
+    [tokyo_night_storm]="Tokyo Night Storm"
     [dracula]="Dracula"
     [nord]="Nord"
+    [rose_pine]="Rosé Pine"
+    [everforest]="Everforest Dark"
+    [kanagawa]="Kanagawa"
 )
 # ---- Mapping → GNOME color-scheme ----
 declare -A GNOME_SCHEME=(
@@ -54,8 +69,12 @@ declare -A GNOME_SCHEME=(
     [gruvbox_light]="prefer-light"
     [catppuccin_mocha]="prefer-dark"
     [tokyo_night]="prefer-dark"
+    [tokyo_night_storm]="prefer-dark"
     [dracula]="prefer-dark"
     [nord]="prefer-dark"
+    [rose_pine]="prefer-dark"
+    [everforest]="prefer-dark"
+    [kanagawa]="prefer-dark"
 )
 
 echo "==> Switching to '$THEME'"
