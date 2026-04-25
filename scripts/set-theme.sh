@@ -48,9 +48,10 @@ fi
 # ---- Cursor IDE ------------------------------------------------------------
 # Rewrite settings.json in place (preserve inode) so Cursor's file watcher
 # fires a MODIFY event — `sed -i` renames a temp file over the original,
-# which Cursor sometimes misses, leaving the theme un-applied until reload.
-# If Cursor is running, also try to trigger a Reload Window via xdotool
-# (Cursor runs under XWayland on GNOME Wayland, so keystroke injection works).
+# which Cursor's watcher could miss, leaving the theme un-applied.
+# Auto-reload of a running Cursor window isn't possible from a script on
+# Wayland (xdotool can't reach native-Wayland windows; ydotool needs root
+# uinput setup). Print a reload hint when Cursor is running.
 CURSOR_SETTINGS="$HOME/.config/Cursor/User/settings.json"
 if [[ -f "$CURSOR_SETTINGS" && -n "${CURSOR_NAME:-}" ]]; then
     echo "    cursor:     ${CURSOR_NAME}"
@@ -61,24 +62,8 @@ if [[ -f "$CURSOR_SETTINGS" && -n "${CURSOR_NAME:-}" ]]; then
         cat "$tmp" > "$CURSOR_SETTINGS"     # truncate-and-write keeps the same inode
         rm -f "$tmp"
     fi
-    # Reload any running Cursor window so the theme takes effect without the
-    # user needing Ctrl+Shift+P → Reload Window manually.
     if pgrep -x cursor >/dev/null 2>&1; then
-        if command -v xdotool >/dev/null 2>&1; then
-            win="$(xdotool search --onlyvisible --class '^[Cc]ursor$' 2>/dev/null | head -1)"
-            if [[ -n "$win" ]]; then
-                echo "    cursor:     reloading window (xdotool)"
-                xdotool key --window "$win" --clearmodifiers ctrl+shift+p >/dev/null 2>&1
-                sleep 0.25
-                xdotool type --window "$win" --delay 15 'Developer: Reload Window' >/dev/null 2>&1
-                sleep 0.15
-                xdotool key --window "$win" Return >/dev/null 2>&1
-            else
-                echo "    cursor:     (running but no window found — Ctrl+Shift+P → Reload Window to apply)"
-            fi
-        else
-            echo "    cursor:     (install xdotool for auto-reload — else Ctrl+Shift+P → Reload Window)"
-        fi
+        echo "    cursor:     (if not applied live: Ctrl+Shift+P → Reload Window)"
     fi
 fi
 
