@@ -1,6 +1,6 @@
 # Theme: Gruvbox Light
 KITTY_NAME="Gruvbox Light"
-CURSOR_NAME="Gruvbox Light Medium"
+CURSOR_NAME="Gruvbox Light Hard"
 GNOME_SCHEME="prefer-light"
 PAPIRUS_COLOR="orange"
 PAPIRUS_BASE="Papirus"

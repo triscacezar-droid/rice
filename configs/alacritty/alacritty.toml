@@ -1,11 +1,20 @@
-# To switch themes, change which file is imported below.
-# Available themes in ~/.config/alacritty/themes/:
+# To switch themes, run `rice theme <name>` (or change the import below).
+# Available dark themes:
 #   gruvbox_dark.toml      (warm retro, high contrast)  <- default
-#   gruvbox_light.toml     (light gruvbox — cream bg)
 #   catppuccin_mocha.toml  (colorful, pastel-y, trendy)
 #   tokyo_night.toml       (dark, vivid blues/purples)
 #   dracula.toml           (classic vibrant purple/pink/green)
 #   nord.toml              (cool arctic blues)
+#   everforest.toml        (muted forest greens)
+#   kanagawa.toml          (japanese woodblock palette)
+#   rose_pine.toml         (dusty rose / iris)
+#   tokyo_night_storm.toml (storm variant of tokyo_night)
+# Available light themes:
+#   gruvbox_light.toml     (cream bg, warm)
+#   solarized_light.toml   (Ethan Schoonover classic)
+#   github_light.toml      (clean modern, like github.dev)
+#   catppuccin_latte.toml  (latte — sister of mocha)
+#   rose_pine_dawn.toml    (dawn — sister of rose_pine)
 import = [
     "~/.config/alacritty/themes/gruvbox_dark.toml",
 ]

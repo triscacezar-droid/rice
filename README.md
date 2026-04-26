@@ -159,8 +159,8 @@ Clone location is `$HOME/rice` by default — override with `RICE_HOME=/other/pa
 ## Changing the color theme
 
 ```bash
+# Dark
 rice theme gruvbox_dark        # default
-rice theme gruvbox_light
 rice theme catppuccin_mocha
 rice theme tokyo_night
 rice theme tokyo_night_storm
@@ -169,6 +169,12 @@ rice theme nord
 rice theme rose_pine
 rice theme everforest
 rice theme kanagawa
+# Light
+rice theme gruvbox_light
+rice theme solarized_light
+rice theme github_light
+rice theme catppuccin_latte
+rice theme rose_pine_dawn
 ```
 
 `rice theme` with no args shows the current theme plus the full list.
@@ -203,15 +209,17 @@ changes to `set-theme.sh` needed.
 - Starship (`configs/starship/starship.toml`)
 
 **Cursor IDE caveat:** switching to a non-gruvbox theme assumes the matching
-Cursor extension is installed. Install them with:
+Cursor extension is installed. Solarized Light ships built-in. Install the
+others with:
 ```bash
-cursor --install-extension Catppuccin.catppuccin-vsc
+cursor --install-extension Catppuccin.catppuccin-vsc       # mocha + latte
 cursor --install-extension enkia.tokyo-night
 cursor --install-extension dracula-theme.theme-dracula
 cursor --install-extension arcticicestudio.nord-visual-studio-code
-cursor --install-extension mvllow.rose-pine
+cursor --install-extension mvllow.rose-pine                # rose_pine + dawn
 cursor --install-extension sainnhe.everforest
 cursor --install-extension metaphore.kanagawa
+cursor --install-extension github.github-vscode-theme       # github_light
 ```
 
 **GTK theme caveat:** only the `Gruvbox-Orange-Dark/Light` variants are
